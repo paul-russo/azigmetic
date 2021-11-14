@@ -124,7 +124,10 @@ fn lexInput() ![]Token {
 
 pub fn main() anyerror!void {
     while (true) {
-        var result = try lexInput();
+        var result = lexInput() catch |err| {
+            try stdout.print("Whoops: {s}\n", .{err});
+            continue;
+        };
 
         for (result) |token| {
             try token.print();
