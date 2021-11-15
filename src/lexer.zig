@@ -8,8 +8,8 @@ var buf: [1024]u8 = undefined;
 var tokenIndex: u16 = 0;
 var tokens: [1024]Token = undefined;
 
-var currentAtomIndex: u16 = 0;
-var currentAtom: [1024]u8 = undefined;
+var currentValueIndex: u16 = 0;
+var currentValue: [1024]u8 = undefined;
 
 fn getNumberFromArr(arr: []u8) !f64 {
     const str = try std.fmt.allocPrint(std.heap.page_allocator, "{s}", .{arr});
@@ -18,14 +18,14 @@ fn getNumberFromArr(arr: []u8) !f64 {
     return number;
 }
 
-fn addAtom() !Token {
-    var number = try getNumberFromArr(currentAtom[0..currentAtomIndex]);
-    var token = Token{ .atom = number };
+fn addValue() !Token {
+    var number = try getNumberFromArr(currentValue[0..currentValueIndex]);
+    var token = Token{ .value = number };
     tokens[tokenIndex] = token;
     tokenIndex += 1;
 
-    currentAtom = undefined;
-    currentAtomIndex = 0;
+    currentValue = undefined;
+    currentValueIndex = 0;
 
     return token;
 }
@@ -36,23 +36,23 @@ pub fn tokenizeInput() ![]Token {
     tokenIndex = 0;
     tokens = undefined;
 
-    currentAtomIndex = 0;
-    currentAtom = undefined;
+    currentValueIndex = 0;
+    currentValue = undefined;
 
     if (try stdin.readUntilDelimiterOrEof(buf[0..], '\n')) |chars| {
         // iterate over input array, creating tokens
         for (chars) |char| {
             switch (char) {
                 ' ' => {
-                    if (currentAtomIndex > 0) {
-                        _ = try addAtom();
+                    if (currentValueIndex > 0) {
+                        _ = try addValue();
                     }
                     continue;
                 },
 
                 '*', '/', '+', '-', '(', ')' => {
-                    if (currentAtomIndex > 0) {
-                        _ = try addAtom();
+                    if (currentValueIndex > 0) {
+                        _ = try addValue();
                     }
                     tokens[tokenIndex] = Token{ .op = char };
                     tokenIndex += 1;
@@ -60,8 +60,8 @@ pub fn tokenizeInput() ![]Token {
                 },
 
                 '0'...'9', '.' => {
-                    currentAtom[currentAtomIndex] = char;
-                    currentAtomIndex += 1;
+                    currentValue[currentValueIndex] = char;
+                    currentValueIndex += 1;
                     continue;
                 },
 
@@ -72,8 +72,8 @@ pub fn tokenizeInput() ![]Token {
         }
 
         // Generate a token for any remaining characters
-        if (currentAtomIndex > 0) {
-            _ = try addAtom();
+        if (currentValueIndex > 0) {
+            _ = try addValue();
         }
     }
 
