@@ -35,7 +35,8 @@ test "expect parseTokens to return correct S for 1 + 2 * 3" {
         .cons = .{
             .head = '+',
             .rest = &[_]S{
-                S{ .atom = 1.0 }, S{
+                S{ .atom = 1.0 },
+                S{
                     .cons = .{
                         .head = '*',
                         .rest = &[_]S{
