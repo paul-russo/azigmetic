@@ -18,16 +18,23 @@ fn getNumberFromArr(arr: []u8) !f64 {
     return number;
 }
 
-fn addValue() !Token {
+fn addValue() !void {
     var number = try getNumberFromArr(currentValue[0..currentValueIndex]);
-    var token = Token{ .value = number };
-    tokens[tokenIndex] = token;
+    tokens[tokenIndex] = Token{ .value = number };
     tokenIndex += 1;
 
     currentValue = undefined;
     currentValueIndex = 0;
+}
 
-    return token;
+fn addOp(char: u8) void {
+    tokens[tokenIndex] = Token{ .op = char };
+    tokenIndex += 1;
+}
+
+fn addEof() void {
+    tokens[tokenIndex] = Token{ .eof = undefined };
+    tokenIndex += 1;
 }
 
 pub fn tokenizeInput() ![]Token {
@@ -45,17 +52,16 @@ pub fn tokenizeInput() ![]Token {
             switch (char) {
                 ' ' => {
                     if (currentValueIndex > 0) {
-                        _ = try addValue();
+                        try addValue();
                     }
                     continue;
                 },
 
                 '*', '/', '+', '-', '(', ')' => {
                     if (currentValueIndex > 0) {
-                        _ = try addValue();
+                        try addValue();
                     }
-                    tokens[tokenIndex] = Token{ .op = char };
-                    tokenIndex += 1;
+                    addOp(char);
                     continue;
                 },
 
@@ -75,6 +81,9 @@ pub fn tokenizeInput() ![]Token {
         if (currentValueIndex > 0) {
             _ = try addValue();
         }
+
+        // Add an EOF token, to indicate the end of input.
+        addEof();
     }
 
     return tokens[0..tokenIndex];

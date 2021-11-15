@@ -13,7 +13,5 @@ pub fn main() anyerror!void {
         for (tokens) |token| {
             try token.print();
         }
-
-        try stdout.print("\n", .{});
     }
 }
