@@ -1,5 +1,5 @@
 const std = @import("std");
-const tokenizeInput = @import("./lexer.zig").tokenizeInput;
+const tokenizeInput = @import("lexer.zig").tokenizeInput;
 
 const stdout = std.io.getStdOut().writer();
 

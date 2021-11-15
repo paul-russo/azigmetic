@@ -1,18 +1,6 @@
 const std = @import("std");
 const Token = @import("token.zig").Token;
-
-pub const STag = enum {
-    atom,
-    cons,
-};
-
-pub const S = union(STag) {
-    atom: f64,
-    cons: struct {
-        head: u8,
-        rest: []const S,
-    },
-};
+const S = @import("s.zig").S;
 
 pub fn parseTokens(tokens: []const Token) S {
     // TODO
@@ -21,7 +9,7 @@ pub fn parseTokens(tokens: []const Token) S {
     return S{ .atom = 2.0 };
 }
 
-test "expect parseTokens to return correct S for 1 + 2 * 3" {
+test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
     const testTokens = [_]Token{
         Token{ .value = 1.0 },
         Token{ .op = '+' },

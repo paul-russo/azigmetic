@@ -14,10 +14,10 @@ pub const Token = union(TokenTag) {
     eof: void,
 
     pub fn print(self: Token) !void {
-        return switch (self) {
+        switch (self) {
             TokenTag.value => |value| try stdout.print("{d}", .{value}),
             TokenTag.op => |op| try stdout.print("{c}", .{op}),
             TokenTag.eof => try stdout.print("\n", .{}),
-        };
+        }
     }
 };
