@@ -51,16 +51,12 @@ pub fn tokenizeInput() ![]Token {
         for (chars) |char| {
             switch (char) {
                 ' ' => {
-                    if (currentValueIndex > 0) {
-                        try addValue();
-                    }
+                    if (currentValueIndex > 0) try addValue();
                     continue;
                 },
 
                 '*', '/', '+', '-', '(', ')' => {
-                    if (currentValueIndex > 0) {
-                        try addValue();
-                    }
+                    if (currentValueIndex > 0) try addValue();
                     addOp(char);
                     continue;
                 },
@@ -78,9 +74,7 @@ pub fn tokenizeInput() ![]Token {
         }
 
         // Generate a token for any remaining characters
-        if (currentValueIndex > 0) {
-            _ = try addValue();
-        }
+        if (currentValueIndex > 0) try addValue();
 
         // Add an EOF token, to indicate the end of input.
         addEof();
