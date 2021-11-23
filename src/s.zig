@@ -19,9 +19,9 @@ pub const S = union(STag) {
         return switch (self) {
             STag.atom => |atom| try allocPrint(allocator, "{d}", .{atom}),
             STag.cons => |cons| {
-                var restStrings: []const u8 = "";
+                var restStrings = cons.rest[0].to_string(allocator);
 
-                for (cons.rest) |s| {
+                for (cons.rest[1..]) |s| {
                     restStrings = try allocPrint(allocator, "{s} {s}", .{ restStrings, s.to_string(allocator) });
                 }
 
