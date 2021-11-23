@@ -3,8 +3,6 @@ const Token = @import("token.zig").Token;
 const TokenTag = @import("token.zig").TokenTag;
 const S = @import("s.zig").S;
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-
 const ParseError = error{
     UnsupportedOperation,
     UnsupportedToken,
@@ -63,8 +61,11 @@ pub fn parseTokens(tokens: []const Token, allocator: *std.mem.Allocator) !S {
     return parseTokensBp(tokens, 0, allocator);
 }
 
+// TESTS
 test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
+
     const testTokens = [_]Token{
         Token{ .value = 1.0 },
         Token{ .op = '+' },
@@ -93,11 +94,9 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
     };
 
     var expectedStr = try expectedS.to_string(&arena.allocator);
-    std.debug.print("\n\nexpected: {s}\n\n", .{expectedStr});
 
     var resultS = try parseTokens(testTokens[0..], &arena.allocator);
     var resultStr = try resultS.to_string(&arena.allocator);
-    std.debug.print("\n\nresult: {s}\n\n", .{resultStr});
 
     try std.testing.expect(std.mem.eql(u8, expectedStr, resultStr));
 }
