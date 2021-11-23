@@ -3,7 +3,7 @@ const S = @import("s.zig").S;
 const STag = @import("s.zig").STag;
 
 const EvaluatorError = error{
-    Wut,
+    InvalidExpression,
 };
 
 pub fn evaluateExpression(expression: S) EvaluatorError!f64 {
@@ -17,6 +17,6 @@ pub fn evaluateExpression(expression: S) EvaluatorError!f64 {
         '-' => lhs - rhs,
         '/' => lhs / rhs,
         '*' => lhs * rhs,
-        else => EvaluatorError.Wut,
+        else => EvaluatorError.InvalidExpression,
     };
 }
