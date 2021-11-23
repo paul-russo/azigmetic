@@ -1,5 +1,5 @@
 const std = @import("std");
-const stdout = std.io.getStdOut().writer();
+const allocPrint = std.fmt.allocPrint;
 
 pub const STag = enum {
     atom,
@@ -15,19 +15,18 @@ pub const S = union(STag) {
     atom: f64,
     cons: Cons,
 
-    pub fn print(self: S) anyerror!void {
-        switch (self) {
-            STag.atom => |atom| try stdout.print("{d}", .{atom}),
+    pub fn to_string(self: S, allocator: *std.mem.Allocator) anyerror![]const u8 {
+        return switch (self) {
+            STag.atom => |atom| try allocPrint(allocator, "{d}", .{atom}),
             STag.cons => |cons| {
-                try stdout.print("({c}", .{cons.head});
+                var restStrings: []const u8 = "";
 
                 for (cons.rest) |s| {
-                    try stdout.print(" ", .{});
-                    try s.print();
+                    restStrings = try allocPrint(allocator, "{s} {s}", .{ restStrings, s.to_string(allocator) });
                 }
 
-                try stdout.print(")", .{});
+                return try allocPrint(allocator, "({c} {s})", .{ cons.head, restStrings });
             },
-        }
+        };
     }
 };

@@ -37,7 +37,7 @@ fn addEof() void {
     tokenIndex += 1;
 }
 
-pub fn tokenizeInput() ![]Token {
+pub fn tokenizeInput() ![]const Token {
     buf = undefined;
 
     tokenIndex = 0;
