@@ -1,20 +1,26 @@
 const std = @import("std");
+const eql = std.mem.eql;
 const Token = @import("token.zig").Token;
 
 const stdin = std.io.getStdIn().reader();
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
-var buf: [1024]u8 = undefined;
+var inputBuf: [1000]u8 = undefined;
 
 var tokenIndex: u16 = 0;
-var tokens: [1024]Token = undefined;
+var tokens: [1000]Token = undefined;
 
 var currentValueIndex: u16 = 0;
-var currentValue: [1024]u8 = undefined;
+var currentValue: [1000]u8 = undefined;
+
+pub const TokenizeError = error{
+    EmptyInput,
+};
 
 fn getNumberFromArr(arr: []u8) !f64 {
-    const str = try std.fmt.allocPrint(std.heap.page_allocator, "{s}", .{arr});
+    const str = try std.fmt.allocPrint(&gpa.allocator, "{s}", .{arr});
+    defer gpa.allocator.free(str);
     var number = try std.fmt.parseFloat(f64, str);
-    defer std.heap.page_allocator.free(str);
     return number;
 }
 
@@ -38,7 +44,7 @@ fn addEof() void {
 }
 
 pub fn tokenizeInput() ![]const Token {
-    buf = undefined;
+    inputBuf = undefined;
 
     tokenIndex = 0;
     tokens = undefined;
@@ -46,7 +52,10 @@ pub fn tokenizeInput() ![]const Token {
     currentValueIndex = 0;
     currentValue = undefined;
 
-    if (try stdin.readUntilDelimiterOrEof(buf[0..], '\n')) |chars| {
+    if (try stdin.readUntilDelimiterOrEof(inputBuf[0..], '\n')) |chars| {
+        if (chars.len == 0) return TokenizeError.EmptyInput;
+        if (eql(u8, chars, "quit") or eql(u8, chars, "exit")) std.process.exit(0);
+
         // iterate over input array, creating tokens
         for (chars) |char| {
             switch (char) {

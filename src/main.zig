@@ -1,19 +1,25 @@
 const std = @import("std");
-const tokenizeInput = @import("lexer.zig").tokenizeInput;
+const tokenizeInput = @import("tokenizer.zig").tokenizeInput;
+const TokenizeError = @import("tokenizer.zig").TokenizeError;
 const parseTokens = @import("parser.zig").parseTokens;
 const evaluateExpression = @import("evaluator.zig").evaluateExpression;
 
 const stdout = std.io.getStdOut().writer();
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() anyerror!void {
+    defer _ = gpa.deinit();
+
     while (true) {
         // Initialize allocator, and defer deinitializing til the end of this loop.
-        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+        var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
         defer arena.deinit();
 
         // Tokenize the input, printing an error and continuing if something goes wrong.
         var tokens = tokenizeInput() catch |err| {
-            try stdout.print("tokenization error: {s}\n", .{err});
+            if (err != TokenizeError.EmptyInput) {
+                try stdout.print("tokenization error: {s}\n", .{err});
+            }
             continue;
         };
 
