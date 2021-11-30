@@ -73,7 +73,7 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
                     if (currentValueIndex > 0) try addValue(allocator);
                 },
 
-                '*', '/', '+', '-' => {
+                '*', '/', '+', '-', '=' => {
                     if (currentValueIndex > 0) try addValue(allocator);
                     addOp(char);
                 },

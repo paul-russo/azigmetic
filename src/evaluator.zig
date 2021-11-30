@@ -4,19 +4,42 @@ const STag = @import("s.zig").STag;
 
 const EvaluatorError = error{
     InvalidExpression,
+    UndefinedVariable,
 };
 
-pub fn evaluateExpression(expression: S) EvaluatorError!f64 {
-    if (expression == STag.atom) return expression.atom;
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var variableMap = std.StringHashMap(f64).init(&gpa.allocator);
 
-    var lhs = try evaluateExpression(expression.cons.rest[0]);
-    var rhs = try evaluateExpression(expression.cons.rest[1]);
+pub fn evaluateExpression(expression: S) anyerror!f64 {
+    if (expression == STag.atom) return expression.atom;
+    if (expression == STag.identifier) {
+        return variableMap.get(expression.identifier) orelse EvaluatorError.UndefinedVariable;
+    }
 
     return switch (expression.cons.head) {
-        '+' => lhs + rhs,
-        '-' => lhs - rhs,
-        '/' => lhs / rhs,
-        '*' => lhs * rhs,
+        '+', '-', '/', '*' => |op| {
+            var lhsResult = try evaluateExpression(expression.cons.rest[0]);
+            var rhsResult = try evaluateExpression(expression.cons.rest[1]);
+
+            return switch (op) {
+                '+' => lhsResult + rhsResult,
+                '-' => lhsResult - rhsResult,
+                '/' => lhsResult / rhsResult,
+                '*' => lhsResult * rhsResult,
+                else => EvaluatorError.InvalidExpression,
+            };
+        },
+        '=' => {
+            var lhs = expression.cons.rest[0];
+            var rhsResult = try evaluateExpression(expression.cons.rest[1]);
+
+            // If the left-hand side of an assignment expression isn't an identifier, then it's invalid.
+            if (lhs != STag.identifier) return EvaluatorError.InvalidExpression;
+
+            try variableMap.put(lhs.identifier, rhsResult);
+
+            return rhsResult;
+        },
         else => EvaluatorError.InvalidExpression,
     };
 }

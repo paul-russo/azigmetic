@@ -15,8 +15,9 @@ const InfixBp = struct {
 
 fn getInfixBindingPower(op: u8) !InfixBp {
     return switch (op) {
-        '+', '-' => .{ .left = 1, .right = 2 },
-        '*', '/' => .{ .left = 3, .right = 4 },
+        '=' => .{ .left = 1, .right = 2 },
+        '+', '-' => .{ .left = 3, .right = 4 },
+        '*', '/' => .{ .left = 5, .right = 6 },
         else => ParseError.UnsupportedOperation,
     };
 }
@@ -26,16 +27,15 @@ var i: u64 = 0;
 fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8) anyerror!S {
     var lhs = switch (tokens[i]) {
         TokenTag.value => |value| S{ .atom = value },
-        else => return ParseError.UnsupportedOperation,
+        TokenTag.identifier => |identifier| S{ .identifier = identifier },
+        else => return ParseError.UnsupportedToken,
     };
 
     while (true) {
         var op = switch (tokens[i + 1]) {
-            TokenTag.eof => {
-                break;
-            },
+            TokenTag.eof => break,
             TokenTag.op => |op| op,
-            TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedToken,
+            TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedOperation,
         };
 
         var bp = try getInfixBindingPower(op);
