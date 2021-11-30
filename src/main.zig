@@ -13,7 +13,7 @@ pub fn main() anyerror!void {
     while (true) {
         // Initialize allocator, and defer deinitializing til the end of this loop.
         var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
-        // defer arena.deinit();
+        defer arena.deinit();
 
         // Tokenize the input, printing an error and continuing if something goes wrong.
         var tokens = tokenizeInput(&arena.allocator) catch |err| {
