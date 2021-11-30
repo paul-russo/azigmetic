@@ -3,7 +3,6 @@ const eql = std.mem.eql;
 const Token = @import("token.zig").Token;
 
 const stdin = std.io.getStdIn().reader();
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 var inputBuf: [1000]u8 = undefined;
 
@@ -17,15 +16,15 @@ pub const TokenizeError = error{
     EmptyInput,
 };
 
-fn getNumberFromArr(arr: []u8) !f64 {
-    const str = try std.fmt.allocPrint(&gpa.allocator, "{s}", .{arr});
-    defer gpa.allocator.free(str);
+fn getNumberFromArr(allocator: *std.mem.Allocator, arr: []u8) !f64 {
+    const str = try std.fmt.allocPrint(allocator, "{s}", .{arr});
     var number = try std.fmt.parseFloat(f64, str);
     return number;
 }
 
-fn addValue() !void {
-    var number = try getNumberFromArr(currentValue[0..currentValueIndex]);
+fn addValue(allocator: *std.mem.Allocator) !void {
+    if (currentValueIndex == 0) return;
+    var number = try getNumberFromArr(allocator, currentValue[0..currentValueIndex]);
     tokens[tokenIndex] = Token{ .value = number };
     tokenIndex += 1;
 
@@ -43,7 +42,16 @@ fn addEof() void {
     tokenIndex += 1;
 }
 
-pub fn tokenizeInput() ![]const Token {
+fn isCurrentValueNumerical() bool {
+    if (currentValueIndex == 0) return false;
+
+    return switch (currentValue[currentValueIndex - 1]) {
+        '0'...'9', '.', 'A'...'Z' => true,
+        else => false,
+    };
+}
+
+pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
     inputBuf = undefined;
 
     tokenIndex = 0;
@@ -60,30 +68,34 @@ pub fn tokenizeInput() ![]const Token {
         for (chars) |char| {
             switch (char) {
                 ' ' => {
-                    if (currentValueIndex > 0) try addValue();
-                    continue;
+                    if (currentValueIndex > 0) try addValue(allocator);
                 },
 
                 '*', '/', '+', '-', '(', ')' => {
-                    if (currentValueIndex > 0) try addValue();
+                    if (currentValueIndex > 0) try addValue(allocator);
                     addOp(char);
-                    continue;
                 },
 
-                '0'...'9', '.' => {
+                '0'...'9', '.', 'A'...'Z' => {
+                    if (currentValueIndex > 0 and !isCurrentValueNumerical()) try addValue(allocator);
                     currentValue[currentValueIndex] = char;
                     currentValueIndex += 1;
-                    continue;
                 },
 
-                else => {
-                    continue;
+                'a'...'z', '_' => {
+                    if (currentValueIndex > 0 and isCurrentValueNumerical()) try addValue(allocator);
+                    currentValue[currentValueIndex] = char;
+                    currentValueIndex += 1;
                 },
+
+                else => continue,
             }
+
+            continue;
         }
 
         // Generate a token for any remaining characters
-        if (currentValueIndex > 0) try addValue();
+        if (currentValueIndex > 0) try addValue(allocator);
 
         // Add an EOF token, to indicate the end of input.
         addEof();

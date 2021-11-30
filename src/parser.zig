@@ -23,7 +23,7 @@ fn getInfixBindingPower(op: u8) !InfixBp {
 
 var i: u64 = 0;
 
-fn parseTokensBp(tokens: []const Token, minBp: u8, allocator: *std.mem.Allocator) anyerror!S {
+fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8) anyerror!S {
     var lhs = switch (tokens[i]) {
         TokenTag.value => |value| S{ .atom = value },
         else => return ParseError.UnsupportedOperation,
@@ -35,7 +35,7 @@ fn parseTokensBp(tokens: []const Token, minBp: u8, allocator: *std.mem.Allocator
                 break;
             },
             TokenTag.op => |op| op,
-            TokenTag.value => return ParseError.UnsupportedToken,
+            TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedToken,
         };
 
         var bp = try getInfixBindingPower(op);
@@ -44,7 +44,7 @@ fn parseTokensBp(tokens: []const Token, minBp: u8, allocator: *std.mem.Allocator
 
         i += 2;
 
-        var rhs = try parseTokensBp(tokens, bp.right, allocator);
+        var rhs = try parseTokensBp(allocator, tokens, bp.right);
 
         var rest = try allocator.alloc(S, 2);
         rest[0] = lhs;
@@ -56,9 +56,9 @@ fn parseTokensBp(tokens: []const Token, minBp: u8, allocator: *std.mem.Allocator
     return lhs;
 }
 
-pub fn parseTokens(tokens: []const Token, allocator: *std.mem.Allocator) !S {
+pub fn parseTokens(allocator: *std.mem.Allocator, tokens: []const Token) !S {
     i = 0;
-    return parseTokensBp(tokens, 0, allocator);
+    return parseTokensBp(allocator, tokens, 0);
 }
 
 // TESTS
@@ -95,7 +95,7 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
 
     var expectedStr = try expectedS.to_string(&arena.allocator);
 
-    var resultS = try parseTokens(testTokens[0..], &arena.allocator);
+    var resultS = try parseTokens(&arena.allocator, testTokens[0..]);
     var resultStr = try resultS.to_string(&arena.allocator);
 
     try std.testing.expect(std.mem.eql(u8, expectedStr, resultStr));

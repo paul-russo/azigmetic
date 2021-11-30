@@ -4,12 +4,14 @@ const allocPrint = std.fmt.allocPrint;
 const stdout = std.io.getStdOut().writer();
 
 pub const TokenTag = enum {
+    identifier,
     value,
     op,
     eof,
 };
 
 pub const Token = union(TokenTag) {
+    identifier: []const u8,
     value: f64,
     op: u8,
     eof: void,
