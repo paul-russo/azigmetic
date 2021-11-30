@@ -16,16 +16,18 @@ pub const TokenizeError = error{
     EmptyInput,
 };
 
-fn getNumberFromArr(allocator: *std.mem.Allocator, arr: []u8) !f64 {
-    const str = try std.fmt.allocPrint(allocator, "{s}", .{arr});
-    var number = try std.fmt.parseFloat(f64, str);
-    return number;
-}
-
 fn addValue(allocator: *std.mem.Allocator) !void {
     if (currentValueIndex == 0) return;
-    var number = try getNumberFromArr(allocator, currentValue[0..currentValueIndex]);
-    tokens[tokenIndex] = Token{ .value = number };
+
+    const str = try std.fmt.allocPrint(allocator, "{s}", .{currentValue[0..currentValueIndex]});
+
+    if (isCurrentValueNumerical()) {
+        var number = try std.fmt.parseFloat(f64, str);
+        tokens[tokenIndex] = Token{ .value = number };
+    } else {
+        tokens[tokenIndex] = Token{ .identifier = str };
+    }
+
     tokenIndex += 1;
 
     currentValue = undefined;
@@ -71,7 +73,7 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
                     if (currentValueIndex > 0) try addValue(allocator);
                 },
 
-                '*', '/', '+', '-', '(', ')' => {
+                '*', '/', '+', '-' => {
                     if (currentValueIndex > 0) try addValue(allocator);
                     addOp(char);
                 },

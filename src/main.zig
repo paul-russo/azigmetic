@@ -23,6 +23,10 @@ pub fn main() anyerror!void {
             continue;
         };
 
+        for (tokens) |token| {
+            try token.print();
+        }
+
         // Parse the tokens
         var expression = parseTokens(&arena.allocator, tokens) catch |err| {
             try stdout.print("parse error: {s}\n", .{err});
