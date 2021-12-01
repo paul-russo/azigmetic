@@ -33,19 +33,21 @@ fn getPrefixBindingPower(op: u8) !u8 {
 var i: u64 = 0;
 
 fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8) anyerror!S {
-    var lhs = switch (tokens[i]) {
+    i += 1;
+
+    var lhs = switch (tokens[i - 1]) {
         TokenTag.value => |value| S{ .atom = value },
         TokenTag.identifier => |identifier| S{ .identifier = identifier },
-        TokenTag.op => |op| {
+        TokenTag.op => |op| blk: {
             const bpRight = try getPrefixBindingPower(op);
             const rhs = try parseTokensBp(allocator, tokens, bpRight);
-            return try makeCons(allocator, op, rhs, null);
+            break :blk try makeCons(allocator, op, rhs, null);
         },
         else => return ParseError.UnsupportedToken,
     };
 
     while (true) {
-        const op = switch (tokens[i + 1]) {
+        const op = switch (tokens[i]) {
             TokenTag.eof => break,
             TokenTag.op => |op| op,
             TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedOperation,
@@ -54,7 +56,7 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
         const bp = try getInfixBindingPower(op);
         if (bp.left < minBp) break;
 
-        i += 2;
+        i += 1;
 
         const rhs = try parseTokensBp(allocator, tokens, bp.right);
         lhs = try makeCons(allocator, op, lhs, rhs);
@@ -96,6 +98,33 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
                         },
                     },
                 },
+            },
+        },
+    };
+
+    var expectedStr = try expectedS.to_string(&arena.allocator);
+
+    var resultS = try parseTokens(&arena.allocator, testTokens[0..]);
+    var resultStr = try resultS.to_string(&arena.allocator);
+
+    try std.testing.expect(std.mem.eql(u8, expectedStr, resultStr));
+}
+
+test "expect parseTokens to return (- 5) for -5" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+
+    const testTokens = [_]Token{
+        Token{ .op = '-' },
+        Token{ .value = 5.0 },
+        Token{ .eof = undefined },
+    };
+
+    const expectedS = S{
+        .cons = .{
+            .head = '-',
+            .rest = &[_]S{
+                S{ .atom = 5.0 },
             },
         },
     };
