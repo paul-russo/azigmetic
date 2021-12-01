@@ -33,3 +33,17 @@ pub const S = union(STag) {
         };
     }
 };
+
+pub fn makeCons(allocator: *std.mem.Allocator, head: u8, lhs: S, rhs: ?S) !S {
+    var rest: []S = undefined;
+    if (rhs != null) {
+        rest = try allocator.alloc(S, 2);
+    } else {
+        rest = try allocator.alloc(S, 1);
+    }
+
+    rest[0] = lhs;
+    if (rhs != null) rest[1] = rhs.?;
+
+    return S{ .cons = .{ .head = head, .rest = rest } };
+}

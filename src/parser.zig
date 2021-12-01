@@ -2,6 +2,7 @@ const std = @import("std");
 const Token = @import("token.zig").Token;
 const TokenTag = @import("token.zig").TokenTag;
 const S = @import("s.zig").S;
+const makeCons = @import("s.zig").makeCons;
 
 const ParseError = error{
     UnsupportedOperation,
@@ -22,35 +23,41 @@ fn getInfixBindingPower(op: u8) !InfixBp {
     };
 }
 
+fn getPrefixBindingPower(op: u8) !u8 {
+    return switch (op) {
+        '+', '-' => 7,
+        else => ParseError.UnsupportedOperation,
+    };
+}
+
 var i: u64 = 0;
 
 fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8) anyerror!S {
     var lhs = switch (tokens[i]) {
         TokenTag.value => |value| S{ .atom = value },
         TokenTag.identifier => |identifier| S{ .identifier = identifier },
+        TokenTag.op => |op| {
+            const bpRight = try getPrefixBindingPower(op);
+            const rhs = try parseTokensBp(allocator, tokens, bpRight);
+            return try makeCons(allocator, op, rhs, null);
+        },
         else => return ParseError.UnsupportedToken,
     };
 
     while (true) {
-        var op = switch (tokens[i + 1]) {
+        const op = switch (tokens[i + 1]) {
             TokenTag.eof => break,
             TokenTag.op => |op| op,
             TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedOperation,
         };
 
-        var bp = try getInfixBindingPower(op);
-
+        const bp = try getInfixBindingPower(op);
         if (bp.left < minBp) break;
 
         i += 2;
 
-        var rhs = try parseTokensBp(allocator, tokens, bp.right);
-
-        var rest = try allocator.alloc(S, 2);
-        rest[0] = lhs;
-        rest[1] = rhs;
-
-        lhs = S{ .cons = .{ .head = op, .rest = rest } };
+        const rhs = try parseTokensBp(allocator, tokens, bp.right);
+        lhs = try makeCons(allocator, op, lhs, rhs);
     }
 
     return lhs;
