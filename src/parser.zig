@@ -16,7 +16,7 @@ const InfixBp = struct {
 
 fn getInfixBindingPower(op: u8) !InfixBp {
     return switch (op) {
-        '=' => .{ .left = 1, .right = 2 },
+        '=' => .{ .left = 2, .right = 1 },
         '+', '-' => .{ .left = 3, .right = 4 },
         '*', '/' => .{ .left = 5, .right = 6 },
         else => ParseError.UnsupportedOperation,
