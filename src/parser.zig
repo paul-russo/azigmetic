@@ -14,6 +14,7 @@ const InfixBp = struct {
     right: u8,
 };
 
+// Get the left-and-right-side binding powers of the given infix operator.
 fn getInfixBindingPower(op: u8) !InfixBp {
     return switch (op) {
         '=' => .{ .left = 2, .right = 1 },
@@ -23,10 +24,19 @@ fn getInfixBindingPower(op: u8) !InfixBp {
     };
 }
 
+// Get the right-side binding power of the given prefix operator.
 fn getPrefixBindingPower(op: u8) !u8 {
     return switch (op) {
         '+', '-' => 7,
         else => ParseError.UnsupportedOperation,
+    };
+}
+
+// Get the left-side binding power of the given operator, provided it is postfix. Otherwise null.
+fn getPostfixBindingPower(op: u8) ?u8 {
+    return switch (op) {
+        '!' => 9,
+        else => null,
     };
 }
 
@@ -52,6 +62,17 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
             TokenTag.op => |op| op,
             TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedOperation,
         };
+
+        const postfixBpLeft = getPostfixBindingPower(op);
+
+        if (postfixBpLeft != null) {
+            if (postfixBpLeft.? < minBp) break;
+
+            i += 1;
+
+            lhs = try makeCons(allocator, op, lhs, null);
+            continue;
+        }
 
         const bp = try getInfixBindingPower(op);
         if (bp.left < minBp) break;

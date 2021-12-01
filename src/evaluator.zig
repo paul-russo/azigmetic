@@ -1,6 +1,7 @@
 const std = @import("std");
 const S = @import("s.zig").S;
 const STag = @import("s.zig").STag;
+const factorial = @import("math.zig").factorial;
 
 const EvaluatorError = error{
     InvalidExpression,
@@ -17,6 +18,13 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
     }
 
     return switch (expression.cons.head) {
+        // Always postfix
+        '!' => blk: {
+            const lhsResult = try evaluateExpression(expression.cons.rest[0]);
+
+            break :blk try factorial(lhsResult);
+        },
+
         // Both prefix and infix
         '+', '-' => |op| {
             var rhsResult: f64 = undefined;
@@ -117,8 +125,8 @@ test "expect result of (+ (- (/ (* 64.2 1.5) 9.567) 4.3) 1.09) to be 7" {
 test "expect result of (+ (- 3.0) (- 6.0)) to be -9" {
     const testExpression = S{
         .cons = .{ .head = '+', .rest = &[_]S{
-            S{ .cons = .{ .head = '-', .rest = &[_]S{ S{ .atom = 3.0 } } } },
-            S{ .cons = .{ .head = '-', .rest = &[_]S{ S{ .atom = 6.0 } } } },
+            S{ .cons = .{ .head = '-', .rest = &[_]S{S{ .atom = 3.0 }} } },
+            S{ .cons = .{ .head = '-', .rest = &[_]S{S{ .atom = 6.0 }} } },
         } },
     };
 
