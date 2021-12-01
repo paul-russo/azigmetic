@@ -17,18 +17,40 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
     }
 
     return switch (expression.cons.head) {
-        '+', '-', '/', '*' => |op| {
-            const lhsResult = try evaluateExpression(expression.cons.rest[0]);
-            const rhsResult = try evaluateExpression(expression.cons.rest[1]);
+        // Both prefix and infix
+        '+', '-' => |op| {
+            var rhsResult: f64 = undefined;
+            var lhsResult: f64 = undefined;
+
+            // Check if this is prefix
+            if (expression.cons.rest.len == 1) {
+                lhsResult = 0;
+                rhsResult = try evaluateExpression(expression.cons.rest[0]);
+            } else {
+                lhsResult = try evaluateExpression(expression.cons.rest[0]);
+                rhsResult = try evaluateExpression(expression.cons.rest[1]);
+            }
 
             return switch (op) {
                 '+' => lhsResult + rhsResult,
                 '-' => lhsResult - rhsResult,
-                '/' => lhsResult / rhsResult,
-                '*' => lhsResult * rhsResult,
-                else => EvaluatorError.InvalidExpression,
+                else => unreachable,
             };
         },
+
+        // Always infix
+        '/', '*' => |op| {
+            const lhsResult = try evaluateExpression(expression.cons.rest[0]);
+            const rhsResult = try evaluateExpression(expression.cons.rest[1]);
+
+            return switch (op) {
+                '/' => lhsResult / rhsResult,
+                '*' => lhsResult * rhsResult,
+                else => unreachable,
+            };
+        },
+
+        // Always infix, right-associative
         '=' => {
             const lhs = expression.cons.rest[0];
             const rhsResult = try evaluateExpression(expression.cons.rest[1]);
@@ -90,4 +112,16 @@ test "expect result of (+ (- (/ (* 64.2 1.5) 9.567) 4.3) 1.09) to be 7" {
 
     const result = try evaluateExpression(testExpression);
     try std.testing.expectEqual(result, 6.85585136406397);
+}
+
+test "expect result of (+ (- 3.0) (- 6.0)) to be -9" {
+    const testExpression = S{
+        .cons = .{ .head = '+', .rest = &[_]S{
+            S{ .cons = .{ .head = '-', .rest = &[_]S{ S{ .atom = 3.0 } } } },
+            S{ .cons = .{ .head = '-', .rest = &[_]S{ S{ .atom = 6.0 } } } },
+        } },
+    };
+
+    const result = try evaluateExpression(testExpression);
+    try std.testing.expectEqual(result, -9.0);
 }
