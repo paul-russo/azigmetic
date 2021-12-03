@@ -1,6 +1,5 @@
 const std = @import("std");
 const S = @import("s.zig").S;
-const STag = @import("s.zig").STag;
 const math = @import("math.zig");
 
 const EvaluatorError = error{
@@ -12,8 +11,8 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 var variableMap = std.StringHashMap(f64).init(&gpa.allocator);
 
 pub fn evaluateExpression(expression: S) anyerror!f64 {
-    if (expression == STag.atom) return expression.atom;
-    if (expression == STag.identifier) {
+    if (expression == .atom) return expression.atom;
+    if (expression == .identifier) {
         return variableMap.get(expression.identifier) orelse EvaluatorError.UndefinedVariable;
     }
 
@@ -65,7 +64,7 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
             const rhsResult = try evaluateExpression(expression.cons.rest[1]);
 
             // If the left-hand side of an assignment expression isn't an identifier, then it's invalid.
-            if (lhs != STag.identifier) return EvaluatorError.InvalidExpression;
+            if (lhs != .identifier) return EvaluatorError.InvalidExpression;
 
             // We need to copy over the identifier string to memory allocated by this module's allocator,
             // so it doesn't get freed by some other code.

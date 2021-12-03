@@ -1,6 +1,5 @@
 const std = @import("std");
 const Token = @import("token.zig").Token;
-const TokenTag = @import("token.zig").TokenTag;
 const S = @import("s.zig").S;
 const makeCons = @import("s.zig").makeCons;
 
@@ -47,9 +46,9 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
     i += 1;
 
     var lhs = switch (tokens[i - 1]) {
-        TokenTag.value => |value| S{ .atom = value },
-        TokenTag.identifier => |identifier| S{ .identifier = identifier },
-        TokenTag.op => |op| blk: {
+        .value => |value| S{ .atom = value },
+        .identifier => |identifier| S{ .identifier = identifier },
+        .op => |op| blk: {
             const bpRight = try getPrefixBindingPower(op);
             const rhs = try parseTokensBp(allocator, tokens, bpRight);
             break :blk try makeCons(allocator, op, rhs, null);
@@ -59,9 +58,9 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
 
     while (true) {
         const op = switch (tokens[i]) {
-            TokenTag.eof => break,
-            TokenTag.op => |op| op,
-            TokenTag.identifier, TokenTag.value => return ParseError.UnsupportedOperation,
+            .eof => break,
+            .op => |op| op,
+            .identifier, .value => return ParseError.UnsupportedOperation,
         };
 
         const postfixBpLeft = getPostfixBindingPower(op);
