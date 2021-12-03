@@ -4,10 +4,9 @@ const S = @import("s.zig").S;
 const makeCons = @import("s.zig").makeCons;
 
 const ParseError = error{
-    UnsupportedOperation,
-    UnsupportedToken,
     UnexpectedEndOfInput,
     UnexpectedToken,
+    UnexpectedOperation,
 };
 
 const InfixBp = struct {
@@ -30,7 +29,7 @@ fn getInfixBindingPower(op: u8) !?InfixBp {
 fn getPrefixBindingPower(op: u8) !u8 {
     return switch (op) {
         '+', '-' => 9,
-        else => ParseError.UnsupportedOperation,
+        else => ParseError.UnexpectedOperation,
     };
 }
 
@@ -60,21 +59,21 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
                 if (tokens[i - 1] != .op) return ParseError.UnexpectedToken;
                 if (tokens[i - 1].op == ')') break :blk lhs;
 
-                return ParseError.UnsupportedOperation;
+                return ParseError.UnexpectedOperation;
             } else {
                 const bpRight = try getPrefixBindingPower(op);
                 const rhs = try parseTokensBp(allocator, tokens, bpRight);
                 break :blk try makeCons(allocator, op, rhs, null);
             }
         },
-        else => return ParseError.UnsupportedToken,
+        .eof => return ParseError.UnexpectedEndOfInput,
     };
 
     while (true) {
         const op = switch (tokens[i]) {
             .eof => break,
             .op => |op| op,
-            .identifier, .value => return ParseError.UnsupportedOperation,
+            .identifier, .value => return ParseError.UnexpectedToken,
         };
 
         const postfixBpLeft = getPostfixBindingPower(op);
