@@ -17,9 +17,10 @@ const InfixBp = struct {
 // Get the left-and-right-side binding powers of the given infix operator.
 fn getInfixBindingPower(op: u8) !InfixBp {
     return switch (op) {
-        '=' => .{ .left = 2, .right = 1 },
-        '+', '-' => .{ .left = 3, .right = 4 },
-        '*', '/' => .{ .left = 5, .right = 6 },
+        '=' => .{ .left = 2, .right = 1 }, // right-associative
+        '+', '-' => .{ .left = 3, .right = 4 }, // left-associative
+        '*', '/' => .{ .left = 5, .right = 6 }, // left-associative
+        '^' => .{ .left = 8, .right = 7 }, // right-associative
         else => ParseError.UnsupportedOperation,
     };
 }
@@ -27,7 +28,7 @@ fn getInfixBindingPower(op: u8) !InfixBp {
 // Get the right-side binding power of the given prefix operator.
 fn getPrefixBindingPower(op: u8) !u8 {
     return switch (op) {
-        '+', '-' => 7,
+        '+', '-' => 9,
         else => ParseError.UnsupportedOperation,
     };
 }
@@ -35,7 +36,7 @@ fn getPrefixBindingPower(op: u8) !u8 {
 // Get the left-side binding power of the given operator, provided it is postfix. Otherwise null.
 fn getPostfixBindingPower(op: u8) ?u8 {
     return switch (op) {
-        '!' => 9,
+        '!' => 11,
         else => null,
     };
 }

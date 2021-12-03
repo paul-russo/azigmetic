@@ -1,7 +1,7 @@
 const std = @import("std");
 const S = @import("s.zig").S;
 const STag = @import("s.zig").STag;
-const factorial = @import("math.zig").factorial;
+const math = @import("math.zig");
 
 const EvaluatorError = error{
     InvalidExpression,
@@ -22,7 +22,7 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
         '!' => blk: {
             const lhsResult = try evaluateExpression(expression.cons.rest[0]);
 
-            break :blk try factorial(lhsResult);
+            break :blk try math.factorial(lhsResult);
         },
 
         // Both prefix and infix
@@ -47,13 +47,14 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
         },
 
         // Always infix
-        '/', '*' => |op| {
+        '/', '*', '^' => |op| {
             const lhsResult = try evaluateExpression(expression.cons.rest[0]);
             const rhsResult = try evaluateExpression(expression.cons.rest[1]);
 
             return switch (op) {
                 '/' => lhsResult / rhsResult,
                 '*' => lhsResult * rhsResult,
+                '^' => math.exp(lhsResult, rhsResult),
                 else => unreachable,
             };
         },

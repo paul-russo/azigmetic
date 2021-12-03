@@ -36,6 +36,8 @@ pub fn main() anyerror!void {
             try stdout.print("evaluation error: {s}\n\n", .{err});
             continue;
         };
+
+        // TODO: Print full number up to 14 digits ({d formatting}), then use scientific notation ({} formatting)
         try stdout.print("{d}\n\n", .{result});
     }
 }
