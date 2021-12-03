@@ -6,6 +6,8 @@ const makeCons = @import("s.zig").makeCons;
 const ParseError = error{
     UnsupportedOperation,
     UnsupportedToken,
+    UnexpectedEndOfInput,
+    UnexpectedToken,
 };
 
 const InfixBp = struct {
@@ -54,9 +56,11 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
 
                 // Ensure the next operation is a closing paren
                 i += 1;
-                if (tokens[i - 1].op != ')') return ParseError.UnsupportedOperation;
+                if (i >= tokens.len) return ParseError.UnexpectedEndOfInput;
+                if (tokens[i - 1] != .op) return ParseError.UnexpectedToken;
+                if (tokens[i - 1].op == ')') break :blk lhs;
 
-                break :blk lhs;
+                return ParseError.UnsupportedOperation;
             } else {
                 const bpRight = try getPrefixBindingPower(op);
                 const rhs = try parseTokensBp(allocator, tokens, bpRight);
