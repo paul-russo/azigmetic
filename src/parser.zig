@@ -14,13 +14,13 @@ const InfixBp = struct {
 };
 
 // Get the left-and-right-side binding powers of the given infix operator.
-fn getInfixBindingPower(op: u8) !InfixBp {
+fn getInfixBindingPower(op: u8) !?InfixBp {
     return switch (op) {
         '=' => .{ .left = 2, .right = 1 }, // right-associative
         '+', '-' => .{ .left = 3, .right = 4 }, // left-associative
         '*', '/' => .{ .left = 5, .right = 6 }, // left-associative
         '^' => .{ .left = 8, .right = 7 }, // right-associative
-        else => ParseError.UnsupportedOperation,
+        else => null,
     };
 }
 
@@ -49,9 +49,19 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
         .value => |value| S{ .atom = value },
         .identifier => |identifier| S{ .identifier = identifier },
         .op => |op| blk: {
-            const bpRight = try getPrefixBindingPower(op);
-            const rhs = try parseTokensBp(allocator, tokens, bpRight);
-            break :blk try makeCons(allocator, op, rhs, null);
+            if (op == '(') {
+                const lhs = try parseTokensBp(allocator, tokens, 0);
+
+                // Ensure the next operation is a closing paren
+                i += 1;
+                if (tokens[i - 1].op != ')') return ParseError.UnsupportedOperation;
+
+                break :blk lhs;
+            } else {
+                const bpRight = try getPrefixBindingPower(op);
+                const rhs = try parseTokensBp(allocator, tokens, bpRight);
+                break :blk try makeCons(allocator, op, rhs, null);
+            }
         },
         else => return ParseError.UnsupportedToken,
     };
@@ -75,12 +85,17 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
         }
 
         const bp = try getInfixBindingPower(op);
-        if (bp.left < minBp) break;
+        if (bp != null) {
+            if (bp.?.left < minBp) break;
 
-        i += 1;
+            i += 1;
 
-        const rhs = try parseTokensBp(allocator, tokens, bp.right);
-        lhs = try makeCons(allocator, op, lhs, rhs);
+            const rhs = try parseTokensBp(allocator, tokens, bp.?.right);
+            lhs = try makeCons(allocator, op, lhs, rhs);
+            continue;
+        }
+
+        break;
     }
 
     return lhs;
