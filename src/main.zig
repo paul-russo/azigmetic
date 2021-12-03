@@ -8,8 +8,6 @@ const stdout = std.io.getStdOut().writer();
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() anyerror!void {
-    defer _ = gpa.deinit();
-
     while (true) {
         // Initialize allocator, and defer deinitializing til the end of this loop.
         var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
@@ -29,7 +27,6 @@ pub fn main() anyerror!void {
             continue;
         };
         var expressionStr = try expression.to_string(&arena.allocator);
-        try stdout.print("{s} = ", .{expressionStr});
 
         // Evaluate the parsed expression
         var result = evaluateExpression(expression) catch |err| {
@@ -38,6 +35,6 @@ pub fn main() anyerror!void {
         };
 
         // TODO: Print full number up to 14 digits ({d formatting}), then use scientific notation ({} formatting)
-        try stdout.print("{d}\n\n", .{result});
+        try stdout.print("{s} = {d}\n\n", .{ expressionStr, result });
     }
 }
