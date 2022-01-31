@@ -13,14 +13,15 @@ pub fn factorial(x: f64) MathError!f64 {
     // If the remainder of x/1 isn't 0, then this isn't an integer.
     if (@mod(x, 1.0) != 0.0) return MathError.FactorialOfNonPositiveInteger;
 
-    var xI = @floatToInt(u64, x);
-    var product: u64 = 1;
+    var xI = @intToFloat(f64, @floatToInt(u64, x));
+    var product: f64 = 1;
 
     while (xI > 0) : (xI -= 1) {
         product = product * xI;
     }
 
-    return @intToFloat(f64, product);
+    // return @intToFloat(f64, product);
+    return product;
 }
 
 test "expect factorial to compute that 5! is 120." {

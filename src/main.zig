@@ -3,6 +3,7 @@ const tokenizeInput = @import("tokenizer.zig").tokenizeInput;
 const TokenizeError = @import("tokenizer.zig").TokenizeError;
 const parseTokens = @import("parser.zig").parseTokens;
 const evaluateExpression = @import("evaluator.zig").evaluateExpression;
+const terseFloat = @import("cli.zig").terseFloat;
 
 const stdout = std.io.getStdOut().writer();
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -34,7 +35,6 @@ pub fn main() anyerror!void {
             continue;
         };
 
-        // TODO: Print full number up to 14 digits ({d formatting}), then use scientific notation ({} formatting)
-        try stdout.print("{s} = {d}\n\n", .{ expressionStr, result });
+        try stdout.print("{s} = {s}\n\n", .{ expressionStr, terseFloat(&arena.allocator, result) });
     }
 }
