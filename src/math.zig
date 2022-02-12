@@ -10,23 +10,33 @@ const MathError = error{
 pub fn factorial(x: f64) MathError!f64 {
     // The factorial of a negative integer is not defined.
     if (x < 0.0) return MathError.FactorialOfNonPositiveInteger;
+
     // If the remainder of x/1 isn't 0, then this isn't an integer.
     if (@mod(x, 1.0) != 0.0) return MathError.FactorialOfNonPositiveInteger;
 
-    var xI = @intToFloat(f64, @floatToInt(u64, x));
+    // 171! is greater than the maximum finite value of f64, so we can short-
+    // circuit here and return the infinite value for f64.
+    if (x > 170) return std.math.inf(f64);
+
+    // Copy argument to a local variable.
+    var y = x;
     var product: f64 = 1;
 
-    while (xI > 0) : (xI -= 1) {
-        product = product * xI;
+    while (y > 0) : (y -= 1) {
+        product = product * y;
     }
 
-    // return @intToFloat(f64, product);
     return product;
 }
 
 test "expect factorial to compute that 5! is 120." {
     const result = try factorial(5);
     try std.testing.expectEqual(@as(f64, 120.0), result);
+}
+
+test "expect factorial to safely avoid computing absurdly large factorials." {
+    const result = try factorial(200);
+    try std.testing.expectEqual(std.math.inf(f64), result);
 }
 
 // Takes a base x and an exponent n and calculates x^n.
