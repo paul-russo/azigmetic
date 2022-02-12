@@ -1,5 +1,6 @@
 const std = @import("std");
 const allocPrint = std.fmt.allocPrint;
+const terseFloat = @import("cli.zig").terseFloat;
 
 pub const STag = enum {
     identifier,
@@ -19,7 +20,7 @@ pub const S = union(STag) {
 
     pub fn to_string(self: S, allocator: *std.mem.Allocator) anyerror![]const u8 {
         return switch (self) {
-            STag.atom => |atom| try allocPrint(allocator, "{d}", .{atom}),
+            STag.atom => |atom| try allocPrint(allocator, "{s}", .{terseFloat(allocator, atom)}),
             STag.identifier => |identifier| try allocPrint(allocator, "{s}", .{identifier}),
             STag.cons => |cons| {
                 var restStrings = cons.rest[0].to_string(allocator);
