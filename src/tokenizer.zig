@@ -22,11 +22,11 @@ fn addValue(allocator: *std.mem.Allocator) !void {
 
     const str = try std.fmt.allocPrint(allocator, "{s}", .{currentValue[0..currentValueIndex]});
 
-    if (!isCurrentValueString()) {
+    if (isCurrentValueIdentifier()) {
+        tokens[tokenIndex] = Token{ .identifier = str };
+    } else {
         var number = try std.fmt.parseFloat(f64, str);
         tokens[tokenIndex] = Token{ .value = number };
-    } else {
-        tokens[tokenIndex] = Token{ .identifier = str };
     }
 
     tokenIndex += 1;
@@ -45,17 +45,13 @@ fn addEof() void {
     tokenIndex += 1;
 }
 
-fn isCurrentValueString() bool {
+fn isCurrentValueIdentifier() bool {
     if (currentValueIndex == 0) return false;
 
-    for (currentValue[0..currentValueIndex]) |char| {
-        switch (char) {
-            'A'...'Z', 'a'...'z', '_' => continue,
-            else => return false,
-        }
-    }
-
-    return true;
+    return switch (currentValue[0]) {
+        'A'...'Z', 'a'...'z', '_', '$' => true,
+        else => false,
+    };
 }
 
 pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
@@ -88,7 +84,7 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
                     addOp(char);
                 },
 
-                '0'...'9', '.', 'A'...'Z', 'a'...'z', '_' => {
+                '0'...'9', '.', 'A'...'Z', 'a'...'z', '_', '$' => {
                     currentValue[currentValueIndex] = char;
                     currentValueIndex += 1;
                 },

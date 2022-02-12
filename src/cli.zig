@@ -22,8 +22,7 @@ pub fn printTerseFloat(x: f64) !void {
     if (numDigits > 9 or numDigits < -9) {
         // Stringify with scientific notation
         try stdout.print("{}", .{x});
-        return;
+    } else {
+        try stdout.print("{d}", .{x});
     }
-
-    try stdout.print("{d}", .{x});
 }

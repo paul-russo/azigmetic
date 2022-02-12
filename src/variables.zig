@@ -5,6 +5,7 @@ const stdout = std.io.getStdOut().writer();
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 var variableMap = std.StringArrayHashMap(f64).init(&gpa.allocator);
+var resultIndex: u64 = 0;
 
 pub fn get(identifier: []const u8) ?f64 {
     return variableMap.get(identifier);
@@ -15,6 +16,14 @@ pub fn set(identifier: []const u8, value: f64) !void {
     // so it doesn't get freed by some other code.
     const copiedIdentifier = try std.fmt.allocPrint(&gpa.allocator, "{s}", .{identifier});
     try variableMap.put(copiedIdentifier, value);
+}
+
+pub fn addResult(value: f64) !u64 {
+    resultIndex += 1;
+    const resultIdentifier = try std.fmt.allocPrint(&gpa.allocator, "${d}", .{resultIndex});
+    try variableMap.put(resultIdentifier, value);
+
+    return resultIndex;
 }
 
 pub fn print() !void {

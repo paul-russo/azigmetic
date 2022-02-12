@@ -4,6 +4,7 @@ const TokenizeError = @import("tokenizer.zig").TokenizeError;
 const parseTokens = @import("parser.zig").parseTokens;
 const evaluateExpression = @import("evaluator.zig").evaluateExpression;
 const terseFloat = @import("cli.zig").terseFloat;
+const variables = @import("variables.zig");
 
 const stdout = std.io.getStdOut().writer();
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -34,6 +35,8 @@ pub fn main() anyerror!void {
             try stdout.print("evaluation error: {s}\n\n", .{err});
             continue;
         };
+
+        _ = try variables.addResult(result);
 
         try stdout.print("{s} = {s}\n\n", .{ expressionStr, terseFloat(&arena.allocator, result) });
     }
