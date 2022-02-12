@@ -1,19 +1,17 @@
 const std = @import("std");
 const S = @import("s.zig").S;
 const math = @import("math.zig");
+const variables = @import("variables.zig");
 
 const EvaluatorError = error{
     InvalidExpression,
     UndefinedVariable,
 };
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-var variableMap = std.StringHashMap(f64).init(&gpa.allocator);
-
 pub fn evaluateExpression(expression: S) anyerror!f64 {
     if (expression == .atom) return expression.atom;
     if (expression == .identifier) {
-        return variableMap.get(expression.identifier) orelse EvaluatorError.UndefinedVariable;
+        return variables.get(expression.identifier) orelse EvaluatorError.UndefinedVariable;
     }
 
     return switch (expression.cons.head) {
@@ -66,10 +64,8 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
             // If the left-hand side of an assignment expression isn't an identifier, then it's invalid.
             if (lhs != .identifier) return EvaluatorError.InvalidExpression;
 
-            // We need to copy over the identifier string to memory allocated by this module's allocator,
-            // so it doesn't get freed by some other code.
-            const copiedIdentifier = try std.fmt.allocPrint(&gpa.allocator, "{s}", .{lhs.identifier});
-            try variableMap.put(copiedIdentifier, rhsResult);
+            // Store the value
+            try variables.set(lhs.identifier, rhsResult);
 
             return rhsResult;
         },

@@ -1,6 +1,7 @@
 const std = @import("std");
 const eql = std.mem.eql;
 const Token = @import("token.zig").Token;
+const variables = @import("variables.zig");
 
 const stdin = std.io.getStdIn().reader();
 
@@ -69,6 +70,11 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
     if (try stdin.readUntilDelimiterOrEof(inputBuf[0..], '\n')) |chars| {
         if (chars.len == 0) return TokenizeError.EmptyInput;
         if (eql(u8, chars, "quit") or eql(u8, chars, "exit")) std.process.exit(0);
+
+        if (eql(u8, chars, "vars") or eql(u8, chars, "variables")) {
+            try variables.print();
+            return TokenizeError.EmptyInput;
+        }
 
         // iterate over input array, creating tokens
         for (chars) |char| {
