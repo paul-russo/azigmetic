@@ -15,6 +15,7 @@ var currentValue: [1000]u8 = undefined;
 
 pub const TokenizeError = error{
     EmptyInput,
+    CommandExecuted,
 };
 
 fn addValue(allocator: *std.mem.Allocator) !void {
@@ -68,8 +69,13 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
         if (eql(u8, chars, "quit") or eql(u8, chars, "exit")) std.process.exit(0);
 
         if (eql(u8, chars, "vars") or eql(u8, chars, "variables")) {
-            try variables.print();
-            return TokenizeError.EmptyInput;
+            try variables.printVariables();
+            return TokenizeError.CommandExecuted;
+        }
+
+        if (eql(u8, chars, "results")) {
+            try variables.printResults();
+            return TokenizeError.CommandExecuted;
         }
 
         // iterate over input array, creating tokens

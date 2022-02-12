@@ -17,7 +17,7 @@ pub fn main() anyerror!void {
 
         // Tokenize the input, printing an error and continuing if something goes wrong.
         var tokens = tokenizeInput(&arena.allocator) catch |err| {
-            if (err != TokenizeError.EmptyInput) {
+            if (err != TokenizeError.EmptyInput and err != TokenizeError.CommandExecuted) {
                 try stdout.print("tokenization error: {s}\n\n", .{err});
             }
             continue;
@@ -36,6 +36,7 @@ pub fn main() anyerror!void {
             continue;
         };
 
+        // Store the result
         _ = try variables.addResult(result);
 
         try stdout.print("{s} = {s}\n\n", .{ expressionStr, terseFloat(&arena.allocator, result) });

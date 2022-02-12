@@ -26,8 +26,11 @@ pub fn addResult(value: f64) !u64 {
     return resultIndex;
 }
 
-pub fn print() !void {
+pub fn print(includeVars: bool, includeResults: bool) !void {
     for (variableMap.keys()) |key| {
+        if (!includeResults and key[0] == '$') continue;
+        if (!includeVars and key[0] != '$') continue;
+
         var value = get(key) orelse 0;
         try stdout.print("{s}: ", .{key});
         try printTerseFloat(value);
@@ -35,4 +38,16 @@ pub fn print() !void {
     }
 
     try stdout.print("\n", .{});
+}
+
+pub fn printVariables() !void {
+    return print(true, false);
+}
+
+pub fn printResults() !void {
+    return print(false, true);
+}
+
+pub fn printAll() !void {
+    return print(true, true);
 }

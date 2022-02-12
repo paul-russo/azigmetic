@@ -1,11 +1,15 @@
 const std = @import("std");
+const eql = std.mem.eql;
 const S = @import("s.zig").S;
 const math = @import("math.zig");
 const variables = @import("variables.zig");
+const validation = @import("validation.zig");
 
 const EvaluatorError = error{
     InvalidExpression,
     UndefinedVariable,
+    CannotAssignToResult,
+    CannotAssignToReservedWord,
 };
 
 pub fn evaluateExpression(expression: S) anyerror!f64 {
@@ -63,6 +67,8 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
 
             // If the left-hand side of an assignment expression isn't an identifier, then it's invalid.
             if (lhs != .identifier) return EvaluatorError.InvalidExpression;
+            if (lhs.identifier[0] == '$') return EvaluatorError.CannotAssignToResult;
+            if (validation.isReservedWord(lhs.identifier)) return EvaluatorError.CannotAssignToReservedWord;
 
             // Store the value
             try variables.set(lhs.identifier, rhsResult);
