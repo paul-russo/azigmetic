@@ -50,7 +50,7 @@ fn isCurrentValueIdentifier() bool {
     if (currentValueIndex == 0) return false;
 
     return switch (currentValue[0]) {
-        'A'...'Z', 'a'...'z', '_', '$' => true,
+        'A'...'Z', 'a'...'z', '$' => true,
         else => false,
     };
 }
