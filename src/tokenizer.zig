@@ -78,6 +78,11 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
             return TokenizeError.CommandExecuted;
         }
 
+        if (eql(u8, chars, "history")) {
+            try variables.printAll();
+            return TokenizeError.CommandExecuted;
+        }
+
         // iterate over input array, creating tokens
         for (chars) |char| {
             switch (char) {
