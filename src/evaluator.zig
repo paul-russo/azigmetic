@@ -48,13 +48,14 @@ pub fn evaluateExpression(expression: S) anyerror!f64 {
         },
 
         // Always infix
-        '/', '*', '^' => |op| {
+        '/', '*', '%', '^' => |op| {
             const lhs_result = try evaluateExpression(expression.cons.rest[0]);
             const rhs_result = try evaluateExpression(expression.cons.rest[1]);
 
             return switch (op) {
                 '/' => lhs_result / rhs_result,
                 '*' => lhs_result * rhs_result,
+                '%' => std.math.mod(f64, lhs_result, rhs_result),
                 '^' => math.exp(lhs_result, rhs_result),
                 else => unreachable,
             };
