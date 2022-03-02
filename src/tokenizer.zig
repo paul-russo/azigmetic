@@ -18,7 +18,7 @@ pub const TokenizeError = error{
     CommandExecuted,
 };
 
-fn addValue(allocator: *std.mem.Allocator) !void {
+fn addValue(allocator: std.mem.Allocator) !void {
     if (current_value_index == 0) return;
 
     const str = try std.fmt.allocPrint(allocator, "{s}", .{current_value[0..current_value_index]});
@@ -55,7 +55,7 @@ fn isCurrentValueIdentifier() bool {
     };
 }
 
-pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
+pub fn tokenizeInput(allocator: std.mem.Allocator) ![]const Token {
     input_buf = undefined;
 
     token_index = 0;

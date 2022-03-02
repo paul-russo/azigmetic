@@ -25,7 +25,7 @@ pub const Token = union(TokenTag) {
         }
     }
 
-    pub fn toString(self: Token, allocator: *std.mem.Allocator) anyerror![]const u8 {
+    pub fn toString(self: Token, allocator: std.mem.Allocator) anyerror![]const u8 {
         return switch (self) {
             TokenTag.identifier => |identifier| try allocPrint(allocator, "{s}", .{identifier}),
             TokenTag.value => |value| try allocPrint(allocator, "{d}", .{value}),

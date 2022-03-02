@@ -5,7 +5,7 @@ const stdout = std.io.getStdOut().writer();
 
 // Returns a stringified representation of the given float number,
 // in scientific notation if the number is longer than 9 digits.
-pub fn terseFloat(allocator: *std.mem.Allocator, x: f64) ![]const u8 {
+pub fn terseFloat(allocator: std.mem.Allocator, x: f64) ![]const u8 {
     const num_digits = @floor(@log10(x)) + 1;
     if (num_digits > 9 or num_digits < -9) {
         // Stringify with scientific notation

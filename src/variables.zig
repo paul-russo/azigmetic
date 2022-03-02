@@ -4,7 +4,8 @@ const printTerseFloat = @import("cli.zig").printTerseFloat;
 const stdout = std.io.getStdOut().writer();
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-var variables = std.StringArrayHashMap(f64).init(&gpa.allocator);
+var gpa_allocator = gpa.allocator();
+var variables = std.StringArrayHashMap(f64).init(gpa.allocator());
 var result_index: u64 = 0;
 
 pub fn get(identifier: []const u8) ?f64 {
@@ -14,13 +15,13 @@ pub fn get(identifier: []const u8) ?f64 {
 pub fn set(identifier: []const u8, value: f64) !void {
     // We need to copy over the identifier string to memory allocated by this module's allocator,
     // so it doesn't get freed by some other code.
-    const identifier_copied = try std.fmt.allocPrint(&gpa.allocator, "{s}", .{identifier});
+    const identifier_copied = try std.fmt.allocPrint(gpa_allocator, "{s}", .{identifier});
     try variables.put(identifier_copied, value);
 }
 
 pub fn addResult(value: f64) !u64 {
     result_index += 1;
-    const result_identifier = try std.fmt.allocPrint(&gpa.allocator, "${d}", .{result_index});
+    const result_identifier = try std.fmt.allocPrint(gpa_allocator, "${d}", .{result_index});
     try variables.put(result_identifier, value);
 
     return result_index;

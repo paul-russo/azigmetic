@@ -12,11 +12,12 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 pub fn main() anyerror!void {
     while (true) {
         // Initialize allocator, and defer deinitializing til the end of this loop.
-        var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
+        var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+        var arena_allocator = arena.allocator();
         defer arena.deinit();
 
         // Tokenize the input, printing an error and continuing if something goes wrong.
-        var tokens = tokenizeInput(&arena.allocator) catch |err| {
+        var tokens = tokenizeInput(arena_allocator) catch |err| {
             if (err != TokenizeError.EmptyInput and err != TokenizeError.CommandExecuted) {
                 try stdout.print("tokenization error: {s}\n\n", .{err});
             }
@@ -24,11 +25,11 @@ pub fn main() anyerror!void {
         };
 
         // Parse the tokens
-        var expression = parseTokens(&arena.allocator, tokens) catch |err| {
+        var expression = parseTokens(arena_allocator, tokens) catch |err| {
             try stdout.print("parse error: {s}\n\n", .{err});
             continue;
         };
-        var expression_str = try expression.toString(&arena.allocator);
+        var expression_str = try expression.toString(arena_allocator);
 
         // Evaluate the parsed expression
         var result = evaluateExpression(expression) catch |err| {
@@ -39,6 +40,6 @@ pub fn main() anyerror!void {
         // Store the result
         _ = try variables.addResult(result);
 
-        try stdout.print("{s} = {s}\n\n", .{ expression_str, terseFloat(&arena.allocator, result) });
+        try stdout.print("{s} = {s}\n\n", .{ expression_str, terseFloat(arena_allocator, result) });
     }
 }

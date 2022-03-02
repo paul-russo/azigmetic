@@ -18,7 +18,7 @@ pub const S = union(STag) {
     atom: f64,
     cons: Cons,
 
-    pub fn toString(self: S, allocator: *std.mem.Allocator) anyerror![]const u8 {
+    pub fn toString(self: S, allocator: std.mem.Allocator) anyerror![]const u8 {
         return switch (self) {
             STag.atom => |atom| try allocPrint(allocator, "{s}", .{terseFloat(allocator, atom)}),
             STag.identifier => |identifier| try allocPrint(allocator, "{s}", .{identifier}),
@@ -35,7 +35,7 @@ pub const S = union(STag) {
     }
 };
 
-pub fn makeCons(allocator: *std.mem.Allocator, head: u8, lhs: S, rhs: ?S) !S {
+pub fn makeCons(allocator: std.mem.Allocator, head: u8, lhs: S, rhs: ?S) !S {
     var rest: []S = undefined;
     if (rhs != null) {
         rest = try allocator.alloc(S, 2);

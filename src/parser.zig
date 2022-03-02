@@ -43,7 +43,7 @@ fn getPostfixBindingPower(op: u8) ?u8 {
 
 var i: u64 = 0;
 
-fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, min_bp: u8) anyerror!S {
+fn parseTokensBp(allocator: std.mem.Allocator, tokens: []const Token, min_bp: u8) anyerror!S {
     i += 1;
 
     var lhs = switch (tokens[i - 1]) {
@@ -104,7 +104,7 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, min_bp: u
     return lhs;
 }
 
-pub fn parseTokens(allocator: *std.mem.Allocator, tokens: []const Token) !S {
+pub fn parseTokens(allocator: std.mem.Allocator, tokens: []const Token) !S {
     i = 0;
     return parseTokensBp(allocator, tokens, 0);
 }
