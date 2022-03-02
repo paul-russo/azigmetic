@@ -28,7 +28,7 @@ pub fn main() anyerror!void {
             try stdout.print("parse error: {s}\n\n", .{err});
             continue;
         };
-        var expressionStr = try expression.to_string(&arena.allocator);
+        var expression_str = try expression.toString(&arena.allocator);
 
         // Evaluate the parsed expression
         var result = evaluateExpression(expression) catch |err| {
@@ -39,6 +39,6 @@ pub fn main() anyerror!void {
         // Store the result
         _ = try variables.addResult(result);
 
-        try stdout.print("{s} = {s}\n\n", .{ expressionStr, terseFloat(&arena.allocator, result) });
+        try stdout.print("{s} = {s}\n\n", .{ expression_str, terseFloat(&arena.allocator, result) });
     }
 }

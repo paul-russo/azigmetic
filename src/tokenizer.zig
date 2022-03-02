@@ -5,13 +5,13 @@ const variables = @import("variables.zig");
 
 const stdin = std.io.getStdIn().reader();
 
-var inputBuf: [1000]u8 = undefined;
+var input_buf: [1000]u8 = undefined;
 
-var tokenIndex: u16 = 0;
+var token_index: u16 = 0;
 var tokens: [1000]Token = undefined;
 
-var currentValueIndex: u16 = 0;
-var currentValue: [1000]u8 = undefined;
+var current_value_index: u16 = 0;
+var current_value: [1000]u8 = undefined;
 
 pub const TokenizeError = error{
     EmptyInput,
@@ -19,52 +19,52 @@ pub const TokenizeError = error{
 };
 
 fn addValue(allocator: *std.mem.Allocator) !void {
-    if (currentValueIndex == 0) return;
+    if (current_value_index == 0) return;
 
-    const str = try std.fmt.allocPrint(allocator, "{s}", .{currentValue[0..currentValueIndex]});
+    const str = try std.fmt.allocPrint(allocator, "{s}", .{current_value[0..current_value_index]});
 
     if (isCurrentValueIdentifier()) {
-        tokens[tokenIndex] = Token{ .identifier = str };
+        tokens[token_index] = Token{ .identifier = str };
     } else {
         var number = try std.fmt.parseFloat(f64, str);
-        tokens[tokenIndex] = Token{ .value = number };
+        tokens[token_index] = Token{ .value = number };
     }
 
-    tokenIndex += 1;
+    token_index += 1;
 
-    currentValue = undefined;
-    currentValueIndex = 0;
+    current_value = undefined;
+    current_value_index = 0;
 }
 
 fn addOp(char: u8) void {
-    tokens[tokenIndex] = Token{ .op = char };
-    tokenIndex += 1;
+    tokens[token_index] = Token{ .op = char };
+    token_index += 1;
 }
 
 fn addEof() void {
-    tokens[tokenIndex] = Token{ .eof = undefined };
-    tokenIndex += 1;
+    tokens[token_index] = Token{ .eof = undefined };
+    token_index += 1;
 }
 
 fn isCurrentValueIdentifier() bool {
-    if (currentValueIndex == 0) return false;
+    if (current_value_index == 0) return false;
 
-    return switch (currentValue[0]) {
+    return switch (current_value[0]) {
         'A'...'Z', 'a'...'z', '$' => true,
         else => false,
     };
 }
 
 pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
-    inputBuf = undefined;
+    input_buf = undefined;
 
-    tokenIndex = 0;
+    token_index = 0;
     tokens = undefined;
 
-    currentValueIndex = 0;
-    currentValue = undefined;
+    current_value_index = 0;
+    current_value = undefined;
 
-    if (try stdin.readUntilDelimiterOrEof(inputBuf[0..], '\n')) |chars| {
+    if (try stdin.readUntilDelimiterOrEof(input_buf[0..], '\n')) |chars| {
         if (chars.len == 0) return TokenizeError.EmptyInput;
         if (eql(u8, chars, "quit") or eql(u8, chars, "exit")) std.process.exit(0);
 
@@ -87,17 +87,17 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
         for (chars) |char| {
             switch (char) {
                 ' ' => {
-                    if (currentValueIndex > 0) try addValue(allocator);
+                    if (current_value_index > 0) try addValue(allocator);
                 },
 
                 '*', '/', '+', '-', '=', '!', '^', '(', ')' => {
-                    if (currentValueIndex > 0) try addValue(allocator);
+                    if (current_value_index > 0) try addValue(allocator);
                     addOp(char);
                 },
 
                 '0'...'9', '.', 'A'...'Z', 'a'...'z', '_', '$' => {
-                    currentValue[currentValueIndex] = char;
-                    currentValueIndex += 1;
+                    current_value[current_value_index] = char;
+                    current_value_index += 1;
                 },
 
                 else => continue,
@@ -107,11 +107,11 @@ pub fn tokenizeInput(allocator: *std.mem.Allocator) ![]const Token {
         }
 
         // Generate a token for any remaining characters
-        if (currentValueIndex > 0) try addValue(allocator);
+        if (current_value_index > 0) try addValue(allocator);
 
         // Add an EOF token, to indicate the end of input.
         addEof();
     }
 
-    return tokens[0..tokenIndex];
+    return tokens[0..token_index];
 }

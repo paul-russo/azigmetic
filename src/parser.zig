@@ -43,7 +43,7 @@ fn getPostfixBindingPower(op: u8) ?u8 {
 
 var i: u64 = 0;
 
-fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8) anyerror!S {
+fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, min_bp: u8) anyerror!S {
     i += 1;
 
     var lhs = switch (tokens[i - 1]) {
@@ -61,8 +61,8 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
 
                 return ParseError.UnexpectedOperation;
             } else {
-                const bpRight = try getPrefixBindingPower(op);
-                const rhs = try parseTokensBp(allocator, tokens, bpRight);
+                const bp_right = try getPrefixBindingPower(op);
+                const rhs = try parseTokensBp(allocator, tokens, bp_right);
                 break :blk try makeCons(allocator, op, rhs, null);
             }
         },
@@ -76,10 +76,10 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
             .identifier, .value => return ParseError.UnexpectedToken,
         };
 
-        const postfixBpLeft = getPostfixBindingPower(op);
+        const postfix_bp_left = getPostfixBindingPower(op);
 
-        if (postfixBpLeft != null) {
-            if (postfixBpLeft.? < minBp) break;
+        if (postfix_bp_left != null) {
+            if (postfix_bp_left.? < min_bp) break;
 
             i += 1;
 
@@ -89,7 +89,7 @@ fn parseTokensBp(allocator: *std.mem.Allocator, tokens: []const Token, minBp: u8
 
         const bp = try getInfixBindingPower(op);
         if (bp != null) {
-            if (bp.?.left < minBp) break;
+            if (bp.?.left < min_bp) break;
 
             i += 1;
 
@@ -114,7 +114,7 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
 
-    const testTokens = [_]Token{
+    const test_tokens = [_]Token{
         Token{ .value = 1.0 },
         Token{ .op = '+' },
         Token{ .value = 2.0 },
@@ -123,7 +123,7 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
         Token{ .eof = undefined },
     };
 
-    const expectedS = S{
+    const expected_s = S{
         .cons = .{
             .head = '+',
             .rest = &[_]S{
@@ -141,25 +141,25 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
         },
     };
 
-    var expectedStr = try expectedS.to_string(&arena.allocator);
+    var expected_str = try expected_s.toString(&arena.allocator);
 
-    var resultS = try parseTokens(&arena.allocator, testTokens[0..]);
-    var resultStr = try resultS.to_string(&arena.allocator);
+    var result_s = try parseTokens(&arena.allocator, test_tokens[0..]);
+    var result_str = try result_s.toString(&arena.allocator);
 
-    try std.testing.expect(std.mem.eql(u8, expectedStr, resultStr));
+    try std.testing.expect(std.mem.eql(u8, expected_str, result_str));
 }
 
 test "expect parseTokens to return (- 5) for -5" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
 
-    const testTokens = [_]Token{
+    const test_tokens = [_]Token{
         Token{ .op = '-' },
         Token{ .value = 5.0 },
         Token{ .eof = undefined },
     };
 
-    const expectedS = S{
+    const expected_s = S{
         .cons = .{
             .head = '-',
             .rest = &[_]S{
@@ -168,10 +168,10 @@ test "expect parseTokens to return (- 5) for -5" {
         },
     };
 
-    var expectedStr = try expectedS.to_string(&arena.allocator);
+    var expected_str = try expected_s.toString(&arena.allocator);
 
-    var resultS = try parseTokens(&arena.allocator, testTokens[0..]);
-    var resultStr = try resultS.to_string(&arena.allocator);
+    var result_s = try parseTokens(&arena.allocator, test_tokens[0..]);
+    var result_str = try result_s.toString(&arena.allocator);
 
-    try std.testing.expect(std.mem.eql(u8, expectedStr, resultStr));
+    try std.testing.expect(std.mem.eql(u8, expected_str, result_str));
 }
