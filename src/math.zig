@@ -45,7 +45,7 @@ pub fn exp(x: f64, n: f64) MathError!f64 {
     // is Imaginary. We live in the Real world here, so return an error instead.
     if (x < 0 and @mod(n, 1.0) != 0.0) return MathError.ExponentiationOfNegativeByNonInteger;
 
-    var abs_result = @exp(n * @log(@fabs(x)));
+    var abs_result = @exp(n * @log(@abs(x)));
 
     // If both the base and the exponent are whole numbers (and the exponent is positive),
     // we know the result should be a whole number, so round to the nearest one.

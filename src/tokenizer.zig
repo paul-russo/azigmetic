@@ -26,7 +26,7 @@ fn addValue(allocator: std.mem.Allocator) !void {
     if (isCurrentValueIdentifier()) {
         tokens[token_index] = Token{ .identifier = str };
     } else {
-        var number = try std.fmt.parseFloat(f64, str);
+        const number = try std.fmt.parseFloat(f64, str);
         tokens[token_index] = Token{ .value = number };
     }
 

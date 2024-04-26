@@ -20,13 +20,14 @@ pub const S = union(STag) {
 
     pub fn toString(self: S, allocator: std.mem.Allocator) anyerror![]const u8 {
         return switch (self) {
-            STag.atom => |atom| try allocPrint(allocator, "{s}", .{terseFloat(allocator, atom)}),
+            STag.atom => |atom| try allocPrint(allocator, "{s}", .{ try terseFloat(allocator, atom )}),
             STag.identifier => |identifier| try allocPrint(allocator, "{s}", .{identifier}),
             STag.cons => |cons| {
-                var rest_strings = cons.rest[0].toString(allocator);
+                var rest_strings = try cons.rest[0].toString(allocator);
 
                 for (cons.rest[1..]) |s| {
-                    rest_strings = try allocPrint(allocator, "{s} {s}", .{ rest_strings, s.toString(allocator) });
+                    const next_string = try s.toString(allocator);
+                    rest_strings = try allocPrint(allocator, "{s} {s}", .{ rest_strings, next_string });
                 }
 
                 return try allocPrint(allocator, "({c} {s})", .{ cons.head, rest_strings });

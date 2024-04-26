@@ -141,10 +141,10 @@ test "expect parseTokens to return (+ 1 (* 2 3)) for 1 + 2 * 3" {
         },
     };
 
-    var expected_str = try expected_s.toString(&arena.allocator);
+    const expected_str = try expected_s.toString(&arena.allocator);
 
     var result_s = try parseTokens(&arena.allocator, test_tokens[0..]);
-    var result_str = try result_s.toString(&arena.allocator);
+    const result_str = try result_s.toString(&arena.allocator);
 
     try std.testing.expect(std.mem.eql(u8, expected_str, result_str));
 }
@@ -168,10 +168,10 @@ test "expect parseTokens to return (- 5) for -5" {
         },
     };
 
-    var expected_str = try expected_s.toString(&arena.allocator);
+    const expected_str = try expected_s.toString(&arena.allocator);
 
     var result_s = try parseTokens(&arena.allocator, test_tokens[0..]);
-    var result_str = try result_s.toString(&arena.allocator);
+    const result_str = try result_s.toString(&arena.allocator);
 
     try std.testing.expect(std.mem.eql(u8, expected_str, result_str));
 }

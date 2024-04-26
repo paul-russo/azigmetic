@@ -32,7 +32,7 @@ pub fn print(includeVars: bool, includeResults: bool) !void {
         if (!includeResults and key[0] == '$') continue;
         if (!includeVars and key[0] != '$') continue;
 
-        var value = get(key) orelse 0;
+        const value = get(key) orelse 0;
         try stdout.print("{s}: ", .{key});
         try printTerseFloat(value);
         try stdout.print("\n", .{});
